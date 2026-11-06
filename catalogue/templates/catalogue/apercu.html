@@ -1,0 +1,234 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aperçu – {{ data.shop }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#284991;--grey:#8a9cc4;--line:#d7deec;--bg:#fff;--card:#fff;--soft:#f5f5f5;--red:#d40505;--blue:#284991;--yellow:#fbfbb3;--sale:#c20000}
+  *{box-sizing:border-box}
+  body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding-bottom:90px}
+  main{max-width:860px;margin:0 auto;padding:28px 16px}
+  a{color:var(--blue)}
+  .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px}
+  .top h1{font-size:13px;margin:0;font-weight:500;color:var(--red);letter-spacing:.2em;text-transform:uppercase}
+  .help{color:var(--ink);font-size:14px;margin:0 0 22px}
+  .err{background:#fde8e6;color:#8a1c12;padding:12px 14px;border-radius:0;margin-bottom:16px}
+
+  /* champs qui ressemblent à du texte, se révèlent au survol */
+  input.t{font:inherit;color:inherit;width:100%;border:1px solid transparent;border-radius:0;padding:3px 6px;margin-left:-7px;background:transparent}
+  input.t:hover{border-color:var(--line);background:#fff}
+  input.t:focus{outline:none;border-color:var(--blue);background:#fff}
+
+  .head{background:var(--card);border:1px solid var(--line);border-radius:0;padding:16px 20px;margin-bottom:18px}
+  .head .shop{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--red)}
+  .head .sub{color:var(--grey)}
+  .head .labels{display:flex;gap:12px;margin-top:8px;font-size:13px;color:var(--grey)}
+  .head .labels label{display:flex;align-items:center;gap:6px;flex:1;white-space:nowrap}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:0;padding:16px 20px;margin-bottom:14px;transition:opacity .2s}
+  .card.off{opacity:.45}
+  .card.off .body{display:none}
+  .bar{display:flex;align-items:center;gap:8px}
+  .bar .num{font-size:11px;color:var(--blue);background:var(--yellow);border-radius:0;padding:3px 9px;letter-spacing:.1em}
+  .bar .sp{flex:1}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:0;padding:5px 10px;font-size:13px;cursor:pointer;color:var(--ink)}
+  .btn:hover{border-color:#bbb}
+  .btn.del{color:var(--red)}
+  .btn{color:var(--blue);border-color:var(--line)}
+  input.t.title{font-size:19px;font-weight:500}
+  input.t.variant{color:var(--red);font-size:12px;font-weight:500;letter-spacing:.18em;text-transform:uppercase}
+  .rows{display:grid;grid-template-columns:90px 1fr;gap:2px 10px;margin:10px 0 14px;font-size:14px}
+  .rows span{font-size:10px;color:var(--grey);text-transform:uppercase;letter-spacing:.2em;padding-top:7px}
+  .compare input{color:var(--sale)}
+  .compare input:not(:placeholder-shown){text-decoration:line-through}
+  input.t::placeholder{color:var(--grey);font-style:italic}
+
+  .slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .slot{position:relative;background:var(--soft);border:2px solid transparent;border-radius:0;height:260px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+  .slot img{max-width:100%;max-height:100%;object-fit:contain}
+  .slot.active{border-color:var(--red)}
+  .slot .cap{position:absolute;left:8px;bottom:6px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);background:rgba(255,255,255,.85);padding:1px 6px;border-radius:0}
+  .slot .empty{color:var(--grey);font-size:13px}
+  .slot .x{position:absolute;right:6px;top:6px;border:0;background:rgba(255,255,255,.9);border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:24px;padding:0}
+  .note{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:13px}
+  .note span{color:var(--grey);white-space:nowrap}
+  .note input{color:var(--red);font-style:italic}
+  .hint{font-size:12px;color:var(--grey);margin:10px 0 6px}
+  .gallery{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+  .gallery img{width:62px;height:62px;object-fit:cover;border-radius:0;border:2px solid transparent;cursor:pointer;flex:none;background:var(--soft)}
+  .gallery img:hover{border-color:#bbb}
+  .gallery img.on1,.gallery img.on2{border-color:var(--red)}
+
+  .foot{position:fixed;left:0;right:0;bottom:0;background:var(--yellow);padding:12px 16px}
+  .foot .in{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .foot .count{flex:1;color:var(--red);font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase}
+  .go{border:1px solid var(--blue);border-radius:0;background:var(--blue);color:#fff;font:500 13px Roboto,sans-serif;letter-spacing:.2em;text-transform:uppercase;padding:12px 22px;cursor:pointer}
+  .go:hover{background:#fff;color:var(--blue)}
+  .go:disabled{opacity:.4;cursor:default}
+  @media (max-width:560px){.rows{grid-template-columns:72px 1fr}.head .labels{flex-direction:column}}
+
+  /* ---- DA Kilometre Paris ---- */
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line);background:#fff}
+  .brand-in{display:flex;align-items:center;gap:14px;text-decoration:none}
+  .brand-in span{color:var(--red);font-weight:700;font-size:16px;letter-spacing:.2em;text-transform:uppercase}
+  .brand-tag{color:var(--red);font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  .caps{text-transform:uppercase;letter-spacing:.2em}
+</style>
+</head>
+<body>
+<header class="brand">
+  <a href="{% url 'index' %}" class="brand-in">
+    <img src="{% static 'catalogue/logo.png' %}" alt="Kilometre Paris" width="44" height="46">
+    <span>Kilometre Paris</span>
+  </a>
+  <span class="brand-tag">Catalogue PDF</span>
+</header>
+<main>
+  <div class="top">
+    <h1>Aperçu du PDF</h1>
+    <a href="{% url 'index' %}">← Nouveau lien</a>
+  </div>
+  <p class="help">Clique sur un texte pour le modifier. Pour changer une photo : clique sur l'emplacement (Devant / Dos), puis sur une miniature.</p>
+
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+
+  <form method="post" id="f">
+    {% csrf_token %}
+    <input type="hidden" name="order" id="order">
+    <input type="hidden" name="order_sent" id="order_sent" value="">
+
+    <div class="head">
+      <input class="t shop" name="shop" value="{{ data.shop }}" aria-label="Nom de la boutique">
+      <input class="t sub" name="subtitle" value="{{ data.subtitle }}" aria-label="Sous-titre">
+      <div class="labels">
+        <label>Légende photo 1 <input class="t" name="lab1" value="{{ data.labels.0 }}" id="lab1"></label>
+        <label>Légende photo 2 <input class="t" name="lab2" value="{{ data.labels.1 }}" id="lab2"></label>
+      </div>
+    </div>
+
+    <div id="cards">
+    {% for it in data.items %}{% with i=forloop.counter0 %}
+      <div class="card" data-i="{{ i }}">
+        <div class="bar">
+          <span class="num">#<b class="pos">{{ forloop.counter }}</b></span>
+          <span class="sp"></span>
+          <button type="button" class="btn up" title="Monter">↑</button>
+          <button type="button" class="btn down" title="Descendre">↓</button>
+          <button type="button" class="btn del">Retirer</button>
+        </div>
+        <div class="body">
+          <input class="t title" name="{{ i }}-title" value="{{ it.title }}">
+          <input class="t variant" name="{{ i }}-variant" value="{{ it.variant }}" placeholder="(pas de variante)">
+          <div class="rows">
+            <span>Collection</span><input class="t" name="{{ i }}-collection" value="{{ it.collection }}">
+            <span>Prix</span><input class="t" name="{{ i }}-price" value="{{ it.price }}">
+            <span>Prix barré</span><div class="compare"><input class="t" name="{{ i }}-compare" value="{{ it.compare }}" placeholder="(aucun)"></div>
+            <span>Quantité</span><input class="t" name="{{ i }}-stock" value="{{ it.stock }}">
+            <span>Tailles</span><input class="t" name="{{ i }}-sizes" value="{{ it.sizes }}" placeholder="(aucune)">
+          </div>
+
+          <input type="hidden" name="{{ i }}-img1" value="{{ it.img1 }}" class="v1">
+          <input type="hidden" name="{{ i }}-img2" value="{{ it.img2 }}" class="v2">
+          <div class="slots">
+            <div class="slot active" data-slot="1"><span class="cap c1"></span></div>
+            <div class="slot" data-slot="2"><span class="cap c2"></span></div>
+          </div>
+          <div class="note"><span>Mention :</span><input class="t" name="{{ i }}-note" value="{{ it.note }}" placeholder="(aucune)"></div>
+
+          <p class="hint">Photos du produit ({{ it.gallery|length }})</p>
+          <div class="gallery">
+            {% for src in it.gallery %}<img loading="lazy" data-src="{{ src }}" alt="Photo {{ forloop.counter }}">{% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endwith %}{% endfor %}
+    </div>
+  </form>
+</main>
+
+<div class="foot"><div class="in">
+  <span class="count" id="count"></span>
+  <button class="go" form="f" type="submit" id="go">Télécharger le PDF</button>
+</div></div>
+
+<script>
+const thumb = (src, w) => src + (src.includes('?') ? '&' : '?') + 'width=' + w;
+const cards = document.getElementById('cards');
+
+function paintSlots(card) {
+  const lab = [document.getElementById('lab1').value, document.getElementById('lab2').value];
+  [1, 2].forEach(n => {
+    const slot = card.querySelector(`.slot[data-slot="${n}"]`);
+    const val = card.querySelector('.v' + n).value;
+    slot.querySelectorAll('img,.empty,.x').forEach(e => e.remove());
+    if (val) {
+      const img = document.createElement('img'); img.src = thumb(val, 600); img.alt = lab[n - 1];
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×';
+      x.title = 'Retirer cette photo';
+      x.onclick = e => { e.stopPropagation(); card.querySelector('.v' + n).value = ''; paintSlots(card); };
+      slot.prepend(img); slot.append(x);
+    } else {
+      const s = document.createElement('span'); s.className = 'empty'; s.textContent = 'Pas de photo'; slot.prepend(s);
+    }
+    slot.querySelector('.cap').textContent = lab[n - 1];
+  });
+  const v1 = card.querySelector('.v1').value, v2 = card.querySelector('.v2').value;
+  card.querySelectorAll('.gallery img').forEach(g => {
+    g.classList.toggle('on1', g.dataset.src === v1);
+    g.classList.toggle('on2', g.dataset.src === v2);
+  });
+}
+
+function refresh() {
+  const kept = [...cards.children].filter(c => !c.classList.contains('off'));
+  kept.forEach((c, n) => c.querySelector('.pos').textContent = n + 1);
+  [...cards.children].filter(c => c.classList.contains('off')).forEach(c => c.querySelector('.pos').textContent = '–');
+  document.getElementById('count').textContent =
+    `${kept.length} fiche(s) · ${Math.ceil(kept.length / 2)} page(s)`;
+  document.getElementById('go').disabled = kept.length === 0;
+}
+
+[...cards.children].forEach(card => {
+  card.querySelectorAll('.gallery img').forEach(g => g.src = thumb(g.dataset.src, 160));
+  card.querySelectorAll('.slot').forEach(slot => slot.onclick = () => {
+    card.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+    slot.classList.add('active');
+  });
+  card.querySelectorAll('.gallery img').forEach(g => g.onclick = () => {
+    const n = card.querySelector('.slot.active').dataset.slot;
+    card.querySelector('.v' + n).value = g.dataset.src;
+    if (n === '1') {  // après « Devant », on passe tout seul à « Dos »
+      card.querySelectorAll('.slot').forEach(s => s.classList.toggle('active', s.dataset.slot === '2'));
+    }
+    paintSlots(card);
+  });
+  card.querySelector('.up').onclick = () => { if (card.previousElementSibling) cards.insertBefore(card, card.previousElementSibling); refresh(); };
+  card.querySelector('.down').onclick = () => { if (card.nextElementSibling) cards.insertBefore(card.nextElementSibling, card); refresh(); };
+  card.querySelector('.del').onclick = e => {
+    const off = card.classList.toggle('off');
+    e.target.textContent = off ? 'Rétablir' : 'Retirer';
+    refresh();
+  };
+  paintSlots(card);
+});
+
+['lab1', 'lab2'].forEach(id => document.getElementById(id).addEventListener('input',
+  () => [...cards.children].forEach(paintSlots)));
+
+document.getElementById('f').addEventListener('submit', () => {
+  document.getElementById('order_sent').value = '1';
+  document.getElementById('order').value = [...cards.children]
+    .filter(c => !c.classList.contains('off')).map(c => c.dataset.i).join(',');
+  const go = document.getElementById('go');
+  go.textContent = 'Génération en cours…';
+  setTimeout(() => go.textContent = 'Télécharger le PDF', 8000);
+});
+
+refresh();
+</script>
+</body>
+</html>

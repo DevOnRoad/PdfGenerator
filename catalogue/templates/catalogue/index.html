@@ -1,0 +1,76 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalogue PDF – Kilometre Paris</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#284991;--soft-blue:#8a9cc4;--line:#d7deec;--red:#d40505;--yellow:#fbfbb3}
+  *{box-sizing:border-box}
+  body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif;background:#fff;color:var(--blue);margin:0;min-height:100vh;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line)}
+  .brand-in{display:flex;align-items:center;gap:14px;text-decoration:none}
+  .brand-in span{color:var(--red);font-weight:700;font-size:16px;letter-spacing:.2em;text-transform:uppercase}
+  .brand-tag{color:var(--red);font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  main{flex:1;width:100%;max-width:640px;margin:0 auto;padding:56px 16px}
+  .kicker{color:var(--red);font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;margin:0 0 12px}
+  h1{font-size:34px;font-weight:400;line-height:1.1;margin:0 0 12px}
+  p.sub{font-size:17px;margin:0 0 36px;line-height:1.4}
+  .err{background:var(--yellow);color:var(--red);padding:12px 14px;margin-bottom:20px;border-left:3px solid var(--red)}
+  label{display:block;font-size:10px;font-weight:500;color:var(--soft-blue);letter-spacing:.2em;text-transform:uppercase;margin:20px 0 8px}
+  input,select{width:100%;padding:12px 14px;border:1px solid var(--blue);border-radius:0;font:16px Roboto,sans-serif;color:var(--blue);background:#fff}
+  input:focus,select:focus{outline:2px solid var(--yellow);outline-offset:0;border-color:var(--red)}
+  input::placeholder{color:var(--soft-blue)}
+  .row{display:flex;gap:12px}.row>div{flex:1}
+  button{margin-top:32px;width:100%;padding:15px;border:1px solid var(--blue);border-radius:0;background:var(--yellow);color:var(--blue);font:500 14px Roboto,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+  button:hover{background:var(--blue);color:#fff}
+  .ferr{color:var(--red);font-size:13px}
+  small{display:block;margin-top:16px;color:var(--soft-blue);font-size:13px;line-height:1.4}
+  footer{background:var(--yellow);color:var(--red);font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;padding:14px 24px;display:flex;justify-content:space-between}
+  @media (max-width:520px){h1{font-size:27px}.brand-tag{display:none}.row{flex-direction:column;gap:0}}
+</style>
+</head>
+<body>
+<header class="brand">
+  <a href="{% url 'index' %}" class="brand-in">
+    <img src="{% static 'catalogue/logo.png' %}" alt="Kilometre Paris" width="44" height="46">
+    <span>Kilometre Paris</span>
+  </a>
+  <span class="brand-tag">Catalogue PDF</span>
+</header>
+
+<main>
+  <p class="kicker">Outil interne</p>
+  <h1>Du site au catalogue PDF</h1>
+  <p class="sub">Colle le lien d'une collection, d'un produit ou de toute la boutique. Tu pourras tout vérifier et modifier avant de télécharger.</p>
+
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+
+  <form method="post" onsubmit="this.querySelector('button').textContent='Récupération des produits…'">
+    {% csrf_token %}
+    <label for="{{ form.url.id_for_label }}">{{ form.url.label }}</label>
+    {{ form.url }} <span class="ferr">{{ form.url.errors|striptags }}</span>
+
+    <div class="row">
+      <div><label for="{{ form.img1.id_for_label }}">{{ form.img1.label }}</label>{{ form.img1 }}</div>
+      <div><label for="{{ form.lab1.id_for_label }}">{{ form.lab1.label }}</label>{{ form.lab1 }}</div>
+    </div>
+    <div class="row">
+      <div><label for="{{ form.img2.id_for_label }}">{{ form.img2.label }}</label>{{ form.img2 }}</div>
+      <div><label for="{{ form.lab2.id_for_label }}">{{ form.lab2.label }}</label>{{ form.lab2 }}</div>
+    </div>
+
+    <label for="{{ form.cur.id_for_label }}">{{ form.cur.label }}</label>
+    {{ form.cur }}
+
+    <button type="submit">Voir l'aperçu</button>
+    <small>Les quantités exactes ne sont pas publiques sur Shopify : le PDF indique la disponibilité.</small>
+  </form>
+</main>
+
+<footer><span>Kilometre Paris</span><span>Catalogue PDF</span></footer>
+</body>
+</html>

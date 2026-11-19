@@ -35,6 +35,8 @@
   small{display:block;margin-top:16px;color:var(--soft-blue);font-size:13px;line-height:1.4}
   footer{background:var(--yellow);color:var(--red);font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;padding:14px 24px;display:flex;justify-content:space-between}
   @media (max-width:520px){h1{font-size:27px}.brand-tag{display:none}.row{flex-direction:column;gap:0}}
+  .logout{margin:0}.logout button{margin:0;width:auto;padding:6px 12px;border:1px solid var(--line);background:#fff;color:var(--red);font:500 11px Roboto,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+  .logout button:hover{border-color:var(--red);background:#fff;color:var(--red)}
 </style>
 </head>
 <body>
@@ -43,7 +45,7 @@
     <img src="{% static 'catalogue/logo.png' %}" alt="Kilometre Paris" width="44" height="46">
     <span>Kilometre Paris</span>
   </a>
-  <span class="brand-tag">Catalogue PDF</span>
+  {% if team_protected %}<form method="post" action="{% url 'deconnexion' %}" class="logout">{% csrf_token %}<button type="submit">Se déconnecter</button></form>{% else %}<span class="brand-tag">Catalogue PDF</span>{% endif %}
 </header>
 
 <main>

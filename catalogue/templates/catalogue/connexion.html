@@ -1,0 +1,50 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Connexion – Catalogue PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#284991;--soft-blue:#8a9cc4;--line:#d7deec;--red:#d40505;--yellow:#fbfbb3}
+  *{box-sizing:border-box}
+  body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif;background:#fff;color:var(--blue);margin:0;min-height:100vh;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:14px;padding:12px 24px;border-bottom:1px solid var(--line)}
+  .brand span{color:var(--red);font-weight:700;font-size:16px;letter-spacing:.2em;text-transform:uppercase}
+  main{flex:1;width:100%;max-width:420px;margin:0 auto;padding:72px 16px}
+  .kicker{color:var(--red);font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;margin:0 0 12px}
+  h1{font-size:30px;font-weight:400;margin:0 0 10px}
+  p.sub{margin:0 0 30px;line-height:1.4}
+  .err{background:var(--yellow);color:var(--red);padding:12px 14px;margin-bottom:20px;border-left:3px solid var(--red)}
+  label{display:block;font-size:10px;font-weight:500;color:var(--soft-blue);letter-spacing:.2em;text-transform:uppercase;margin:0 0 8px}
+  input{width:100%;padding:12px 14px;border:1px solid var(--blue);border-radius:0;font:16px Roboto,sans-serif;color:var(--blue)}
+  input:focus{outline:2px solid var(--yellow);outline-offset:0;border-color:var(--red)}
+  button{margin-top:24px;width:100%;padding:15px;border:1px solid var(--blue);border-radius:0;background:var(--yellow);color:var(--blue);font:500 14px Roboto,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+  button:hover{background:var(--blue);color:#fff}
+  footer{background:var(--yellow);color:var(--red);font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;padding:14px 24px}
+</style>
+</head>
+<body>
+<header class="brand">
+  <img src="{% static 'catalogue/logo.png' %}" alt="Kilometre Paris" width="44" height="46">
+  <span>Kilometre Paris</span>
+</header>
+<main>
+  <p class="kicker">Catalogue PDF</p>
+  <h1>Connexion</h1>
+  <p class="sub">Outil réservé à l'équipe. Entre le mot de passe commun.</p>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label for="pw">Mot de passe</label>
+    <input id="pw" name="password" type="password" autocomplete="current-password" required autofocus>
+    <button type="submit">Entrer</button>
+  </form>
+</main>
+<footer>Kilometre Paris · Catalogue PDF</footer>
+</body>
+</html>

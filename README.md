@@ -34,6 +34,7 @@ shopify_pdf/
 └── catalogue/               l'application
     ├── services.py          récupération Shopify + génération du PDF
     ├── shopify_admin.py     connexion à l'API Admin (vraies quantités)
+    ├── auth.py              mot de passe commun pour la version en ligne
     ├── forms.py             le formulaire (lien, photos, légendes, devise)
     ├── views.py             la page : affiche le formulaire, renvoie le PDF
     ├── urls.py
@@ -113,7 +114,39 @@ Relance le serveur : la page d'accueil affiche « Stocks Shopify connectés ».
   l'appli affiche alors un message, réessaie plus tard.
 - Maximum 500 produits par PDF.
 
-## Mise en ligne
+## Mettre en ligne pour toute l'équipe (Render)
 
-Avant de publier : dans `config/settings.py`, mets `DEBUG = False`, remplace la
-`SECRET_KEY` par une valeur secrète et ajoute ton domaine dans `ALLOWED_HOSTS`.
+Une fois en ligne, l'outil a sa propre adresse (ex. `https://catalogue-pdf.onrender.com`) :
+chacun l'ouvre, entre le **mot de passe commun**, colle son lien et télécharge son PDF.
+Sur ton ordinateur, rien ne change (pas de mot de passe en local).
+
+### 1. Mettre le site en ligne (une seule fois, ~15 min)
+
+1. Pousse le code sur GitHub (`git push`). Le fichier `render.yaml` contient déjà toute la configuration.
+2. Crée un compte sur https://render.com avec **« Sign up with GitHub »** et autorise
+   l'accès au dépôt `PdfGenerator`.
+3. Dans Render : **New → Blueprint**, choisis le dépôt `PdfGenerator`.
+4. Render lit `render.yaml` et te demande les valeurs secrètes :
+   - `APP_PASSWORD` : le mot de passe que l'équipe utilisera (choisis-en un long)
+   - `SHOPIFY_SHOP`, `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET` : les mêmes que dans ton `.env`
+   (`SECRET_KEY` est générée automatiquement, `DEBUG` est déjà à `False`.)
+5. Valide (**Apply / Deploy**) et attends la fin de la construction (quelques minutes).
+6. L'adresse du site s'affiche en haut de la page du service. Envoie-la à l'équipe avec
+   le mot de passe (de vive voix ou par un canal interne, pas dans un document public).
+
+### 2. Au quotidien
+
+- **Mettre à jour le site** : `git push`, Render redéploie tout seul.
+- **Changer le mot de passe** : Render → ton service → **Environment** → modifie
+  `APP_PASSWORD` → **Save**. Tout le monde devra se reconnecter avec le nouveau.
+- **Se déconnecter** : bouton en haut à droite du site.
+
+### Bon à savoir
+
+- Offre gratuite : le site **s'endort après 15 minutes sans visite** et met environ
+  1 minute à se réveiller. Pour un usage quotidien en équipe, passe sur une offre payante
+  (Render → ton service → **Settings → Instance type**) ; voir les tarifs sur render.com.
+- Pour les très grosses collections (plusieurs centaines de produits avec photos), une
+  instance avec plus de mémoire évite les plantages.
+- Les catalogues en cours d'édition sont perdus quand le site redémarre : il suffit
+  de recoller le lien.

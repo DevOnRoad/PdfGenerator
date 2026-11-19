@@ -28,6 +28,10 @@
   button{margin-top:32px;width:100%;padding:15px;border:1px solid var(--blue);border-radius:0;background:var(--yellow);color:var(--blue);font:500 14px Roboto,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
   button:hover{background:var(--blue);color:#fff}
   .ferr{color:var(--red);font-size:13px}
+  .status{display:flex;gap:8px;align-items:flex-start;margin:16px 0 0;color:var(--soft-blue);font-size:13px;line-height:1.4}
+  .status .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--soft-blue);margin-top:5px}
+  .status.on{color:var(--blue)}
+  .status.on .dot{background:#2e9d5b}
   small{display:block;margin-top:16px;color:var(--soft-blue);font-size:13px;line-height:1.4}
   footer{background:var(--yellow);color:var(--red);font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;padding:14px 24px;display:flex;justify-content:space-between}
   @media (max-width:520px){h1{font-size:27px}.brand-tag{display:none}.row{flex-direction:column;gap:0}}
@@ -67,7 +71,11 @@
     {{ form.cur }}
 
     <button type="submit">Voir l'aperçu</button>
-    <small>Les quantités exactes ne sont pas publiques sur Shopify : le PDF indique la disponibilité.</small>
+    {% if shopify_on %}
+    <p class="status on"><span class="dot"></span>Stocks Shopify connectés · {{ shopify_shop }}</p>
+    {% else %}
+    <p class="status"><span class="dot"></span>Stocks Shopify non connectés : le PDF indique la disponibilité. Voir le README pour connecter ta boutique.</p>
+    {% endif %}
   </form>
 </main>
 

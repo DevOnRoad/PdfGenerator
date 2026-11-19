@@ -2,6 +2,7 @@ from django.http import FileResponse
 from django.shortcuts import redirect, render
 
 from .forms import CatalogueForm
+from . import shopify_admin
 from .services import ShopError, collect, render_pdf
 
 SESSION_KEY = "catalogue"
@@ -25,7 +26,10 @@ def index(request):
         except Exception as e:  # erreur imprévue : on l'affiche plutôt que planter
             error = f"Erreur inattendue : {e}"
 
-    return render(request, "catalogue/index.html", {"form": form, "error": error})
+    return render(request, "catalogue/index.html", {
+        "form": form, "error": error,
+        "shopify_on": shopify_admin.is_configured(), "shopify_shop": shopify_admin._shop(),
+    })
 
 
 def apercu(request):

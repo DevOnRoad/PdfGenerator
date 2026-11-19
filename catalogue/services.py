@@ -7,10 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 
 import requests
+
+from . import shopify_admin
 from PIL import Image
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
+from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfgen import canvas
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (catalogue-pdf)"}
@@ -135,10 +137,21 @@ def _size_label(v, skip):
 
 
 def _stock(variants, sizes):
-    qty = [v.get("inventory_quantity") for v in variants if v.get("inventory_quantity") is not None]
+    """Texte de la ligne Quantité.
+    Avec la connexion Shopify : vraies quantités, détaillées par taille.
+    Sinon : disponibilité publique (Disponible / Épuisé / tailles disponibles)."""
+    known = [v for v in variants if v.get("inventory_quantity") is not None]
+    if known:
+        qty = {id(v): max(int(v["inventory_quantity"]), 0) for v in known}
+        total = sum(qty.values())
+        head = f"{total} en stock" if total else "Épuisé (0 en stock)"
+        if total and sizes and len(variants) > 1:
+            # on ne détaille que ce qui est en stock, pour garder une ligne lisible
+            detail = ", ".join(f"{s} : {qty[id(v)]}" for v, s in zip(variants, sizes)
+                               if qty.get(id(v)))
+            return f"{head} · {detail}"
+        return head
     available = [v for v in variants if v.get("available")]
-    if qty:
-        return f"{sum(qty)} en stock"
     if not available:
         return "Épuisé"
     if sizes and len(available) < len(variants):
@@ -245,7 +258,7 @@ def normalise(p, coll_name, img_idx):
     for v in variants:
         groups.setdefault(v.get(f"option{opt + 1}") or "—", []).append(v)
     found = _variant_images(p, groups, opt)
-    opt_name = p["options"][opt].get("name", "Variante")
+    opt_name = p["options"][opt].get("name", "Variante").strip()
 
     out = []
     for value, vs in groups.items():
@@ -322,13 +335,44 @@ SHOP_NAMES = {"kilometre.paris": "Kilometre Paris"}
 def collect(url, img_idx=(0, 1), cur="€"):
     """Récupère la boutique et prépare les fiches modifiables (sans télécharger les photos)."""
     base, kind, handle = parse_url(url)
-    products = fetch_products(base, kind, handle)
-    coll = collection_title(base, kind, handle)
+    warning, admin, admin_error = None, None, None
+    # 1. Boutique connectée : on lit directement dans Shopify (produits + vraies quantités)
+    try:
+        admin = shopify_admin.fetch_products_admin(kind, handle, MAX_PRODUCTS)
+    except shopify_admin.AdminError as e:
+        admin_error = str(e)
+    if admin:
+        products, coll = admin
+        coll = coll or (None if kind != "collection" else handle.replace("-", " ").title())
+        source = "shopify"
+    else:
+        # 2. Sinon : site public (disponibilité seulement)
+        try:
+            products = fetch_products(base, kind, handle)
+        except ShopError as e:
+            if admin_error:
+                raise ShopError(f"{e} Et la connexion Shopify a échoué : {admin_error}")
+            if shopify_admin.is_configured():
+                raise ShopError(f"Introuvable dans la boutique connectée ({shopify_admin._shop()}) : "
+                                f"vérifie le lien. (Site public : {e})")
+            raise
+        for p in products:  # on ignore les quantités éventuellement présentes dans le JSON public
+            for v in p.get("variants", []):
+                v.pop("inventory_quantity", None)
+        if admin_error:
+            warning = f"Stocks Shopify non récupérés : {admin_error} Le PDF affiche la disponibilité à la place."
+        elif shopify_admin.is_configured():
+            warning = ("Ce lien ne correspond à aucun produit de la boutique connectée "
+                       f"({shopify_admin._shop()}) : le PDF affiche la disponibilité publique.")
+        coll = collection_title(base, kind, handle)
+        source = "public"
     items = [to_editable(it, cur) for p in products for it in normalise(p, coll, img_idx)]
     domain = urlparse(base).netloc.replace("www.", "")
     shop = SHOP_NAMES.get(domain, domain.split(".")[0].replace("-", " ").title())
     subtitle = f"Collection {coll}" if coll else ("Produit" if kind == "product" else "Tous les produits")
-    return {"shop": shop, "subtitle": subtitle, "filename": f"{domain.split('.')[0]}_{handle or 'catalogue'}.pdf",
+    return {"shop": shop, "subtitle": subtitle, "warning": warning,
+            "stock_source": source,
+            "filename": f"{domain.split('.')[0]}_{handle or 'catalogue'}.pdf",
             "items": items}
 
 
@@ -411,10 +455,15 @@ def build_pdf(items, shop_name, subtitle, labels):
             rows.append(("Tailles", it["sizes"]))
         yy = top - 42 - shift
         for k, v in rows:
-            v = (v or "—")[:90]
+            v = (v or "—")[:200]
+            font = F_MED if k == "Prix" else F
+            lines = simpleSplit(v, font, 10.5, W - 2 * M - 78)[:2] or ["—"]
             _spaced(c, M, yy + 1, k, F_MED, 7, BLUE_SOFT, 0.2)
-            c.setFont(F_MED if k == "Prix" else F, 10.5); c.setFillColor(BLUE)
-            c.drawString(M + 78, yy, v)
+            c.setFont(font, 10.5); c.setFillColor(BLUE)
+            c.drawString(M + 78, yy, lines[0])
+            for extra in lines[1:]:
+                yy -= 13
+                c.drawString(M + 78, yy, extra)
             if k == "Prix" and it.get("compare"):
                 x = M + 78 + c.stringWidth(v, F_MED, 10.5) + 10
                 old = it["compare"][:30]
@@ -425,8 +474,9 @@ def build_pdf(items, shop_name, subtitle, labels):
                 c.setFillColor(YELLOW); c.rect(tx, yy - 3, 40, 13, stroke=0, fill=1)
                 _spaced(c, tx + 5, yy + 0.5, "Promo", F_BOLD, 6.5, BLUE, 0.2)
             yy -= 15
-        iw, ih = (W - 2 * M - 12) / 2, 196
+        iw = (W - 2 * M - 12) / 2
         iy = top - 340 + 24
+        ih = min(196, (yy + 15 - 14) - iy)  # photos un peu plus petites s'il y a beaucoup de texte
         for k in range(2):
             picture(it["images"][k], M + k * (iw + 12), iy, iw, ih, labels[k])
         if it.get("note"):
